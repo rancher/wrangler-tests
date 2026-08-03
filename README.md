@@ -1,4 +1,4 @@
-# wrangler-playground
+# wrangler-tests
 
 A playground for exploring and developing an integration testing framework for Rancher Wrangler controllers.
 
