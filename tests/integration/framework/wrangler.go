@@ -6,7 +6,7 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 
-	corecontrollers "github.com/rancher/wrangler/pkg/generated/controllers/core"
+	corecontrollers "github.com/rancher/wrangler/v3/pkg/generated/controllers/core"
 )
 
 type WranglerContext struct {
