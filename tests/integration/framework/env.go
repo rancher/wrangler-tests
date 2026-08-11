@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	corecontrollers "github.com/rancher/wrangler/pkg/generated/controllers/core"
+	corecontrollers "github.com/rancher/wrangler/v3/pkg/generated/controllers/core"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
