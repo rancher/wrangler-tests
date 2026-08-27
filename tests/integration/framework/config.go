@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -39,4 +40,12 @@ func LoadKubeConfig() (*rest.Config, error) {
 
 	kubeconfig := filepath.Join(home, ".kube", "config")
 	return clientcmd.BuildConfigFromFlags("", kubeconfig)
+}
+
+func NewRawClient() (*kubernetes.Clientset, error) {
+	cfg, err := LoadKubeConfig()
+	if err != nil {
+		return nil, err
+	}
+	return kubernetes.NewForConfig(cfg)
 }
