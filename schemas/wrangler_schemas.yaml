@@ -1,0 +1,134 @@
+- projects:
+    - RM
+  suite: Go Automation/Wrangler
+  cases:
+    - title: TestConfigMapCacheListBySelector
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestConfigMapCacheGet
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestConfigMapCacheGetMissing
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestConfigMapCacheOnChange
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestConfigMapCacheOnDelete
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestConfigMapInformer
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestConfigMapInformerHandler
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestConfigMapController
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestConfigMapControllerHandler
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestConfigMapControllerQueue
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestSecretCacheListBySelector
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestSecretCacheGet
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestSecretCacheGetMissing
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestSecretCacheOnChange
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestSecretCacheOnDelete
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestSecretInformer
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestSecretInformerHandler
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestSecretController
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestSecretControllerHandler
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestSecretControllerQueue
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestCABundle
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestCABundleFromConfigMap
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestCABundleFromSecret
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestCABundleFromConfigMapAndSecret
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestCABundleFromConfigMapAndSecretWithInvalidData
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
+    - title: TestCABundleFromConfigMapAndSecretWithMissingData
+      priority: 4
+      type: 8
+      is_flaky: 0
+      automation: 2
