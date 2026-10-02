@@ -1,0 +1,172 @@
+name: Wrangler Integration Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      wrangler_version:
+        description: Wrangler version to test (with leading "v")
+        required: true
+        type: string
+      qase_test_run_id:
+        description: Existing Qase test run ID (optional, will create a new run if not provided)
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  wrangler-integration-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout wrangler-tests
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      - name: Set wrangler version in wrangler-tests go.mod
+        env:
+          # WRANGLER_VERSION: "${{ inputs.wrangler_version }}"
+          WRANGLER_VERSION: "v3.8.0-rc.2"
+        run: |
+          set -euo pipefail
+
+          module="github.com/rancher/wrangler/v3"
+
+          echo "go.mod before:"
+          grep -E "${module} " go.mod || true
+
+          go get "${module}@${WRANGLER_VERSION}"
+
+          echo "go.mod after:"
+          grep -E "${module} " go.mod || true
+
+          # Guard: only go.mod and go.sum may have changed
+          changed="$(git status --porcelain --untracked-files=no | grep -vE ' (go\.mod|go\.sum)$' || true)"
+          if [ -n "$changed" ]; then
+            echo "::error::Unexpected files changed:"
+            echo "$changed"
+            exit 1
+          fi
+
+          git diff --stat go.mod go.sum
+
+      - name: Install gotestsum
+        run: go install gotest.tools/gotestsum@c4a0df2e75a225d979a444342dd3db752b53619f
+
+      - name: Install k3d
+        run: curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+
+      - name: Verify tooling
+        run: |
+          docker version
+          k3d version
+          kubectl version --client
+
+      - name: Create k3d cluster
+        run: ./scripts/create-cluster.sh
+
+      - name: Configure kubeconfig
+        run: |
+          set -euo pipefail
+
+          k3d kubeconfig get wrangler-integration > "${GITHUB_WORKSPACE}/kubeconfig"
+          chmod 600 "${GITHUB_WORKSPACE}/kubeconfig"
+
+          echo "Kubeconfig created:"
+          ls -l "${GITHUB_WORKSPACE}/kubeconfig"
+
+          echo "Current context:"
+          kubectl --kubeconfig "${GITHUB_WORKSPACE}/kubeconfig" config current-context
+
+          echo "Cluster nodes:"
+          kubectl --kubeconfig "${GITHUB_WORKSPACE}/kubeconfig" get nodes
+
+      - name: Verify cluster
+        run: |
+          set -euo pipefail
+          kubectl --kubeconfig "${GITHUB_WORKSPACE}/kubeconfig" get nodes
+          kubectl --kubeconfig "${GITHUB_WORKSPACE}/kubeconfig" wait --for=condition=Ready nodes --all --timeout=120s
+
+      # LEAVE COMMENTED OUT FOR NOW
+      # - name: Format Qase milestone
+      #   id: qase_milestone
+      #   if: inputs.qase_test_run_id == ''
+      #   env:
+      #     # WRANGLER_VERSION: ${{ inputs.wrangler_version }}
+      #     WRANGLER_VERSION: "v3.8.0-rc.2"
+      #   run: |
+      #     set -euo pipefail
+      #     version="${WRANGLER_VERSION}"
+      #     base="${version%%-*}"
+      #     echo "version=${base}" >> "$GITHUB_OUTPUT"
+
+      # add step to fetch Qase milestones and verify the existence of the milestone corresponding to the Wrangler version, else create that milestone in Qase
+
+      - name: Create Qase test run
+        id: create-qase-run
+        if: inputs.qase_test_run_id == ''
+        uses: ./.github/actions/create-qase-test-run
+        with:
+          # test_run_name: "Wrangler_Tests - ${{ inputs.wrangler_version }}"
+          test_run_name: "Wrangler_Tests - v3.8.0-rc.2"
+          qase_project_id: ${{ secrets.QASE_PROJECT_ID }}
+          qase_token: ${{ secrets.QASE_AUTOMATION_TOKEN }}
+          # qase_milestone: ${{ steps.qase_milestone.outputs.version }}
+
+      - name: Resolve Qase test run ID
+        id: qase-run
+        env:
+          PROVIDED_RUN_ID: ${{ inputs.qase_test_run_id }}
+          CREATED_RUN_ID: ${{ steps.create-qase-run.outputs.id }}
+        run: |
+          set -euo pipefail
+          run_id="${PROVIDED_RUN_ID:-$CREATED_RUN_ID}"
+
+          if [[ ! "$run_id" =~ ^[0-9]+$ ]]; then
+            echo "::error::Qase test run ID must be numeric."
+            exit 1
+          fi
+
+          echo "id=$run_id" >> "$GITHUB_OUTPUT"
+
+      - name: Run wrangler integration suite and report to Qase
+        uses: ./.github/actions/run-test-suite
+        env:
+          KUBECONFIG: ${{ github.workspace }}/kubeconfig
+          QASE_TEST_RUN_ID: ${{ steps.qase-run.outputs.id }}
+          QASE_AUTOMATION_TOKEN: ${{ secrets.QASE_AUTOMATION_TOKEN }}
+          QASE_PROJECT_ID: ${{ secrets.QASE_PROJECT_ID }}
+        with:
+          package: "tests/integration"
+          reporting: "true"
+          tag: "validation"
+          test-suite: ".*"
+          timeout: "30m"
+
+      - name: Close Qase test run
+        if: env.test_exit_code == '0'
+        uses: ./.github/actions/close-qase-test-run
+        with:
+          qase_run_id: ${{ steps.qase-run.outputs.id }}
+          qase_project_id: ${{ secrets.QASE_PROJECT_ID }}
+          qase_token: ${{ secrets.QASE_AUTOMATION_TOKEN }}
+
+      - name: Warn if Qase test run left open
+        if: always() && env.test_exit_code != '0'
+        run: |
+          echo "::warning::Qase run ${{ steps.qase-run.outputs.id }} left open due to test failure (exit code: ${test_exit_code:-unknown})."
+
+      - name: Delete k3d cluster
+        if: always()
+        run: k3d cluster delete --all || true
