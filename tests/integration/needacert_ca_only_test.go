@@ -17,6 +17,8 @@ import (
 )
 
 func TestNeedACertCABundleModeCAOnly(t *testing.T) {
+	requireWranglerVersion37(t)
+
 	h := framework.NewHarness(t)
 
 	name := fmt.Sprintf("needacert-test-%d", time.Now().UnixNano())
