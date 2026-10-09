@@ -32,8 +32,8 @@ func TestNeedACertCABundleModeCAOnly(t *testing.T) {
 				Name:      name,
 				Namespace: h.Namespace,
 				Annotations: map[string]string{
-					needacert.SecretAnnotation:       secretName,
-					needacert.CABundleModeAnnotation: needacert.CABundleModeCAOnly,
+					needacert.SecretAnnotation:             secretName,
+					"need-a-cert.cattle.io/ca-bundle-mode": "ca-only",
 				},
 			},
 			Spec: corev1.ServiceSpec{
