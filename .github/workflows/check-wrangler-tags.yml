@@ -20,7 +20,7 @@ env:
   S3_BUCKET: ${{ secrets.WRANGLER_TAGS_S3_BUCKET }}
 
   # Add new minors here and remove retired minors as needed.
-  SUPPORTED_MINORS: "3.4 3.5 3.6 3.7 3.8"
+  SUPPORTED_MINORS: "3.5 3.6 3.7 3.8"
 
 jobs:
   check-wrangler-tags:
